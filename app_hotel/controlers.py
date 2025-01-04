@@ -83,6 +83,15 @@ class APIClass:
         return await service.booking_create(data=data)
 
 
+    @router_hotel.delete(path="/booking/{id}/")
+    async def delete_booking(
+                                self,
+                                id: int):
+        service = BookingService(db=self.db)
+        await service.booking_delete(id=id)
+        return JSONResponse(content={"message": "Booking deleted successfully."}, status_code=status.HTTP_200_OK)
+
+
     @router_hotel.get(path="/booking/", response_model=list[BookingViewBase], status_code=status.HTTP_200_OK)
     async def list_booking(self):
         service = BookingService(db=self.db, cuser=self.cuser)

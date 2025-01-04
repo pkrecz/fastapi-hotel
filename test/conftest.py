@@ -3,6 +3,7 @@ import logging
 import asyncio
 import pytest
 import pytest_asyncio
+from datetime import datetime, timedelta
 from asgi_lifespan import LifespanManager
 from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
@@ -132,4 +133,13 @@ def data_test_create_room():
 def data_test_update_room():
     return {
             "person": 1,
-            "status": "Blocked"}
+            "status": "Inactive"}
+
+
+@pytest.fixture()
+def data_test_create_booking():
+    start_date = datetime.now().date()
+    end_date = start_date + timedelta(days=1)
+    return {
+            "date_from": str(start_date),
+            "date_to": str(end_date)}

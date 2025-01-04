@@ -128,9 +128,8 @@ async def sub_test_create_room(
     assert response.status_code == 201
     assert response_json["number"] == data_test_create_room["number"]
     assert response_json["person"] == data_test_create_room["person"]
-    assert response_json["status"] == "Free"
+    assert response_json["status"] == "Active"
     assert response_json["description"] == data_test_create_room["description"]
-    assert response_json["booking"] is None
     assert response_json["roomtypes"] is not None
     logging.info("Creation room testing finished.")
     os.environ["ROOM_ID"] = str(response_json["id"])
@@ -149,7 +148,6 @@ async def sub_test_update_room(
     assert response.status_code == 200
     assert response_json["person"] == data_test_update_room["person"]
     assert response_json["status"] == data_test_update_room["status"]
-    assert response_json["booking"] is None
     assert response_json["roomtypes"] is not None
     logging.info("Update room testing finished.")
 
@@ -177,6 +175,47 @@ async def sub_test_delete_room(async_client):
     logging.info("Deletion room testing finished.")
 
 
+async def sub_test_create_booking(
+                                    async_client,
+                                    data_test_create_booking):
+    data_test_create_booking["room"] = int(os.environ["ROOM_ID"])
+    response = await async_client.post(
+                                    url=f"/booking/",
+                                    json=data_test_create_booking,
+                                    headers={"Authorization": f"Bearer {os.environ["BEARER_TOKEN"]}"})
+    response_json = response.json()
+    logging.info("Creation booking testing ...")
+    assert response.status_code == 201
+    assert response_json["date_from"] == data_test_create_booking["date_from"]
+    assert response_json["date_to"] == data_test_create_booking["date_to"]
+    assert response_json["rooms"] is not None
+    logging.info("Creation booking testing finished.")
+    os.environ["BOOKING_ID"] = str(response_json["id"])
+
+
+async def sub_test_delete_booking(async_client):
+    id = os.environ["BOOKING_ID"]
+    response = await async_client.delete(
+                                    url=f"/booking/{id}/",
+                                    headers={"Authorization": f"Bearer {os.environ["BEARER_TOKEN"]}"})
+    response_json = response.json()
+    logging.info("Deletion booking testing ...")
+    assert response.status_code == 200
+    assert response_json == {"message": "Booking deleted successfully."}
+    logging.info("Deletion booking testing finished.")
+
+
+async def sub_test_get_list_booking(async_client):
+    response = await async_client.get(
+                                    url=f"/booking/",
+                                    headers={"Authorization": f"Bearer {os.environ["BEARER_TOKEN"]}"})
+    response_json = response.json()
+    logging.info("Get list booking testing ...")
+    assert response.status_code == 200
+    assert len(response_json) == 1
+    logging.info("Get list booking testing finished.")
+
+
 ########################################## Execute tests ###########################################
 async def test_authentication(
                                 async_client,
@@ -200,7 +239,8 @@ async def test_hotel(
                                 data_test_login,
                                 data_test_create_room_type,
                                 data_test_create_room,
-                                data_test_update_room):
+                                data_test_update_room,
+                                data_test_create_booking):
     logging.info("START - testing hotel module")
     await sub_test_register_user(async_client, data_test_register_user)
     await sub_test_login(async_client, data_test_login)
@@ -208,6 +248,9 @@ async def test_hotel(
     await sub_test_create_room(async_client, data_test_create_room)
     await sub_test_update_room(async_client, data_test_update_room)
     await sub_test_get_list_room(async_client)
+    await sub_test_create_booking(async_client, data_test_create_booking)
+    await sub_test_get_list_booking(async_client)
+    await sub_test_delete_booking(async_client)
     await sub_test_delete_room(async_client)
     await sub_test_delete_room_type(async_client)
     await sub_test_delete_user(async_client)

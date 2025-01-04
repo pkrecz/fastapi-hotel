@@ -51,7 +51,7 @@ class APIAuthenticationClass:
                             data: UserChangePasswordBase,
                             cuser: UserModel = Depends(dependency.log_dependency)):
         service = AuthenticationService(db=self.db, cuser=cuser)
-        return await service.authentication_change_password(data=data)
+        return await service.authentication_change_password(id=cuser.id, data=data)
 
 
     @router_authentication.put(path="/update/", status_code=status.HTTP_200_OK, response_model=UserViewBase)
@@ -60,7 +60,7 @@ class APIAuthenticationClass:
                             data: UserUpdateBase,
                             cuser: UserModel = Depends(dependency.log_dependency)):
         service = AuthenticationService(db=self.db, cuser=cuser)
-        return await service.authentication_update_user(data=data)
+        return await service.authentication_update_user(id=cuser.id, data=data)
 
 
     @router_authentication.delete(path="/delete/", status_code=status.HTTP_200_OK)
@@ -68,4 +68,4 @@ class APIAuthenticationClass:
                             self,
                             cuser: UserModel = Depends(dependency.log_dependency)):
         service = AuthenticationService(db=self.db, cuser=cuser)
-        return await service.authentication_delete_user()
+        return await service.authentication_delete_user(id=cuser.id)

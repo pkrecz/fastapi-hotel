@@ -1,12 +1,49 @@
-from typing import TypeVar, Annotated
-from pydantic import BaseModel
+from typing import TypeVar
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from fastapi_filter.contrib.sqlalchemy import Filter
+from sqlalchemy import select, exists
+from datetime import date, timedelta
 from config.database import Base
 
 
 Model = TypeVar("Model", bound=Base)
+
+
+class RoomTypeRepository:
+
+    def __init__(self, db: AsyncSession, model: Model):
+        self.db = db
+        self.model = model
+
+
+    async def check_if_exists_room_type_by_type(self, type: str) -> bool:
+        query = select(self.model).filter_by(type=type)
+        query = exists(query).select()
+        return await self.db.scalar(query)
+
+
+    async def check_if_exists_room_type_by_id(self, id: int) -> bool:
+        query = select(self.model).filter_by(id=id)
+        query = exists(query).select()
+        return await self.db.scalar(query)
+
+
+class RoomRepository:
+
+    def __init__(self, db: AsyncSession, model: Model):
+        self.db = db
+        self.model = model
+
+
+    async def check_if_exists_room_by_number(self, number: str) -> bool:
+        query = select(self.model).filter_by(number=number)
+        query = exists(query).select()
+        return await self.db.scalar(query)
+
+
+    async def check_if_exists_room_by_id(self, id: int) -> bool:
+        query = select(self.model).filter_by(id=id)
+        query = exists(query).select()
+        return await self.db.scalar(query)
 
 
 class BookingRepository:
@@ -15,67 +52,42 @@ class BookingRepository:
         self.db = db
         self.model = model
 
-    async def get_booking_by_user(self, id: int) -> Model:
-        query = select(self.model).filter_by(owner=id)
+
+    async def check_if_exists_booking_by_id(self, id: int) -> bool:
+        query = select(self.model).filter_by(id=id)
+        query = exists(query).select()
+        return await self.db.scalar(query)
+
+
+    def create_list_of_days(self, start_date: date, stop_date: date) -> list:
+        date_list = list()
+        while start_date <= stop_date:
+            date_list.append(start_date)
+            start_date += timedelta(days=1)
+        return date_list
+
+
+    async def create_occupied_days_list(self, id: int) -> list:
+        occupied_days_list = list()
+        query = select(self.model).filter_by(room=id)
         instance = await self.db.scalars(query)
-        return instance.all() 
+        for item in instance.all():
+            occupied_days_list += self.create_list_of_days(start_date=item.date_from, stop_date=item.date_to)
+        occupied_days_list = list(set(occupied_days_list))
+        occupied_days_list.sort()
+        return occupied_days_list
 
 
-class CrudOperationRepository:
-
-    def __init__(self, db: AsyncSession, model: Model):
-        self.db = db
-        self.model = model
-
-
-    async def get_by_id(self, id: int) -> Model:
-        return await self.db.get(self.model, id)
-
-
-    async def get_all(self, filter: Filter = None) -> Model:
-        query = select(self.model)
-        if filter is not None:
-            query = filter.filter(query)
-            query = filter.sort(query)
+    async def get_booking_by_user(self, id: int) -> Model:
+        query = select(self.model).filter_by(user=id)
         instance = await self.db.scalars(query)
         return instance.all()
 
 
-    async def create(self, data: Annotated[BaseModel, dict]) -> Model:
-        if isinstance(data, BaseModel):
-            data = data.model_dump()
-        record = self.model(**data)
-        self.db.add(record)
-        await self.db.flush()
-        await self.db.refresh(record)
-        return record
-
-
-    async def update(self, id: int, data: Annotated[BaseModel, dict]) -> Model:
-        record = await self.get_by_id(id)
-        if isinstance(data, BaseModel):
-            data = data.model_dump(exclude_none=True)
-        for key, value in data.items():
-            setattr(record, key, value)
-        await self.db.merge(record)
-        await self.db.flush()
-        await self.db.refresh(record)
-        return record
-
-
-    async def delete(self, id: int) -> bool:
-        record = await self.get_by_id(id)
-        if record is not None:
-            await self.db.delete(record)
-            await self.db.flush()
-            return True
-        else:
-            return False
-
-
-    async def retrieve(self, record: Model) -> Model:
-        return record
-
-
-    async def list(self, record: Model) -> list[Model]:
-        return record
+    async def check_availability_room(self, id: int, date_from: date, date_to: date) -> bool:
+        requested_days_list = self.create_list_of_days(start_date=date_from, stop_date=date_to)
+        occupied_days_list = await self.create_occupied_days_list(id=id)
+        for day in requested_days_list[1::]:
+            if day in occupied_days_list:
+                return False
+        return True

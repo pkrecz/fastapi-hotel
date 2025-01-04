@@ -10,9 +10,11 @@ class BookingModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     date_from: Mapped[date] = mapped_column(Date, nullable=False)
     date_to: Mapped[date] = mapped_column(Date, nullable=False)
-    owner: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
+    user: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    room: Mapped[int] = mapped_column(Integer, ForeignKey("room.id"), nullable=False)
+
     users = relationship("UserModel", back_populates="bookings")
-    rooms = relationship("RoomModel", uselist=False, back_populates="bookings")
+    rooms = relationship("RoomModel", back_populates="bookings", lazy="selectin")
 
 
 class RoomTypeModel(Base):
@@ -20,6 +22,7 @@ class RoomTypeModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     type: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+
     rooms = relationship("RoomModel", back_populates="roomtypes")
 
 
@@ -30,8 +33,8 @@ class RoomModel(Base):
     number: Mapped[str] = mapped_column(String(10), unique=True, nullable=False)
     person: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String(250), nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="Free")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="Active")
     type: Mapped[int] = mapped_column(Integer, ForeignKey("roomtype.id"), nullable=False)
-    booking: Mapped[int] = mapped_column(Integer, ForeignKey("booking.id"), nullable=True)
-    bookings = relationship("BookingModel", back_populates="rooms")
+
+    bookings = relationship("BookingModel", back_populates="rooms", lazy="selectin")
     roomtypes = relationship("RoomTypeModel", back_populates="rooms", lazy="selectin")
