@@ -22,19 +22,19 @@ class AuthenticationRepository:
 
 
     async def check_if_exists_user_by_id(self, id: int) -> bool:
-        query = select(self.model).filter_by(id=id)
+        query = select(self.model).filter(self.model.id == id)
         query = exists(query).select()
         return await self.db.scalar(query)
 
 
     async def check_if_exists_user_by_username(self, username: str) -> bool:
-        query = select(self.model).filter_by(username=username)
+        query = select(self.model).filter(self.model.username == username)
         query = exists(query).select()
         return await self.db.scalar(query)
 
 
     async def check_if_exists_user_by_email(self, email: str) -> bool:
-        query = select(self.model).filter_by(email=email)
+        query = select(self.model).filter(self.model.email == email)
         query = exists(query).select()
         return await self.db.scalar(query)
 
@@ -44,12 +44,12 @@ class AuthenticationRepository:
 
 
     async def get_user_by_username(self, username: str) -> Model:
-        query = select(self.model).filter_by(username=username)
+        query = select(self.model).filter(self.model.username == username)
         return await self.db.scalar(query)
 
 
     async def get_active_status(self, username: str) -> bool:
-        query = select(self.model).filter_by(username=username)
+        query = select(self.model).filter(self.model.username == username)
         instance = await self.db.scalar(query)
         return bool(instance.is_active)
 

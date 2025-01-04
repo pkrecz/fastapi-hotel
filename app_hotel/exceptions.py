@@ -33,7 +33,7 @@ class RoomNotAvailableException(HTTPException):
     def __init__(self):
         super().__init__(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail="Room is not available of this period of time.")
+                        detail="Room is not available in this period of time.")
 
 
 class BookingNotExistsException(HTTPException):

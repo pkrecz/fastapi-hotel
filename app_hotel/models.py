@@ -10,6 +10,7 @@ class BookingModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     date_from: Mapped[date] = mapped_column(Date, nullable=False)
     date_to: Mapped[date] = mapped_column(Date, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="Active")
     user: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
     room: Mapped[int] = mapped_column(Integer, ForeignKey("room.id"), nullable=False)
 
