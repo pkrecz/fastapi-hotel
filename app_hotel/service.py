@@ -90,6 +90,20 @@ class BookingService:
         return await self.crud.delete(id)
 
 
-    async def booking_list(self, user_id: int) -> Model:
-        instance = await self.booking.get_booking_by_user(user_id)
+    async def booking_list(self, filter: Filter = None) -> Model:
+        instance = await self.crud.get_all(filter)
         return await self.crud.list(instance)
+
+
+    async def booking_check_in(self, id: int):
+        if not await self.booking.check_if_exists_booking_by_id(id):
+            raise exceptions.BookingNotExistsException
+        data = {"status": "CheckIn"}
+        return await self.crud.update(id, data)
+
+
+    async def booking_check_out(self, id: int):
+        if not await self.booking.check_if_exists_booking_by_id(id):
+            raise exceptions.BookingNotExistsException
+        data = {"status": "CheckOut"}
+        return await self.crud.update(id, data)

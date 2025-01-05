@@ -10,7 +10,7 @@ from .schemas import (
                         RoomTypeCreateBase, RoomTypeViewBase,
                         RoomCreateBase, RoomUpdateBase, RoomViewBase,
                         BookingCreateBase, BookingViewBase)
-from .filters import RoomFilter
+from .filters import RoomFilter, BookingFilter
 from .service import RoomTypeService, RoomService, BookingService
 
 
@@ -92,7 +92,27 @@ class APIClass:
         return JSONResponse(content={"message": "Booking deleted successfully."}, status_code=status.HTTP_200_OK)
 
 
+    @router_hotel.put(path="/booking/{id}/check_in/")
+    async def check_in_booking(
+                                self,
+                                id: int):
+        service = BookingService(db=self.db)
+        await service.booking_check_in(id=id)
+        return JSONResponse(content={"message": "CheckIn done."}, status_code=status.HTTP_200_OK)
+
+
+    @router_hotel.put(path="/booking/{id}/check_out/")
+    async def check_out_booking(
+                                self,
+                                id: int):
+        service = BookingService(db=self.db)
+        await service.booking_check_out(id=id)
+        return JSONResponse(content={"message": "CheckOut done."}, status_code=status.HTTP_200_OK)
+
+
     @router_hotel.get(path="/booking/", response_model=list[BookingViewBase], status_code=status.HTTP_200_OK)
-    async def list_booking(self):
-        service = BookingService(db=self.db, cuser=self.cuser)
-        return await service.booking_list(self.cuser.id)
+    async def list_booking(
+                                self,
+                                filter: BookingFilter = FilterDepends(BookingFilter)):
+        service = BookingService(db=self.db)
+        return await service.booking_list(filter=filter)

@@ -43,6 +43,7 @@ class BookingListBase(BaseModel):
     id: int
     date_from: date
     date_to: date
+    status: str
 
 
 class RoomViewBase(BaseModel):
@@ -67,4 +68,5 @@ class BookingViewBase(BaseModel):
     id: int
     date_from: date
     date_to: date
+    status: str
     rooms: RoomListBase
