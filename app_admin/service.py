@@ -32,10 +32,8 @@ class AuthenticationService:
         if self.auth.check_the_same_password(data.password, data.password_confirm) == False:
             raise exceptions.NotTheSamePasswordException
         input = {
-            "username": data.username,
-            "full_name": data.full_name,
-            "email": data.email,
-            "hashed_password": self.auth.hash_password(data.password)}
+                    **data.model_dump(exclude={"password", "password_confirm"}),
+                    "hashed_password": self.auth.hash_password(data.password)}
         return await self.crud.create(input)
 
 

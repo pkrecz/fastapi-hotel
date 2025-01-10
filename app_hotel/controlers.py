@@ -8,7 +8,7 @@ from config.dependency import Dependency
 from app_admin.models import UserModel
 from .schemas import (
                         RoomTypeCreateBase, RoomTypeViewBase,
-                        RoomCreateBase, RoomUpdateBase, RoomViewBase,
+                        RoomCreateBase, RoomUpdateBase, RoomViewBase, RoomFreeBase,
                         BookingCreateBase, BookingViewBase)
 from .filters import RoomFilter, BookingFilter
 from .service import RoomTypeService, RoomService, BookingService
@@ -73,6 +73,12 @@ class APIClass:
 							    filter: RoomFilter = FilterDepends(RoomFilter)):
         service = RoomService(db=self.db)
         return await service.room_get_list(filter=filter)
+
+
+    @router_hotel.get(path="/room_free/", response_model=list[RoomFreeBase], status_code=status.HTTP_200_OK)
+    async def list_free_room(self):
+        service = RoomService(db=self.db)
+        return await service.room_free_get_list()
 
 
     @router_hotel.post(path="/booking/", response_model=BookingViewBase, status_code=status.HTTP_201_CREATED)

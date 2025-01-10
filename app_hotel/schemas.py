@@ -46,6 +46,11 @@ class BookingListBase(BaseModel):
     status: str
 
 
+class BookingFreeBase(BaseModel):
+    date_from: date
+    date_to: date
+
+
 class RoomViewBase(BaseModel):
     id: int
     number: str
@@ -62,6 +67,14 @@ class RoomListBase(BaseModel):
     person: int
     description: Optional[str]
     roomtypes: RoomTypeViewBase
+
+
+class RoomFreeBase(BaseModel):
+    id: int
+    person: int
+    description: Optional[str]
+    roomtypes: RoomTypeViewBase
+    free_booking: list[BookingFreeBase]
 
 
 class BookingViewBase(BaseModel):

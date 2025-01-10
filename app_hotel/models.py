@@ -14,7 +14,7 @@ class BookingModel(Base):
     user: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
     room: Mapped[int] = mapped_column(Integer, ForeignKey("room.id"), nullable=False)
 
-    users = relationship("UserModel", back_populates="bookings")
+    users = relationship("UserModel", back_populates="bookings", lazy="selectin")
     rooms = relationship("RoomModel", back_populates="bookings", lazy="selectin")
 
 
@@ -24,7 +24,7 @@ class RoomTypeModel(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     type: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
 
-    rooms = relationship("RoomModel", back_populates="roomtypes")
+    rooms = relationship("RoomModel", back_populates="roomtypes", lazy="selectin")
 
 
 class RoomModel(Base):

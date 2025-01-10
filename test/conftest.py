@@ -9,7 +9,12 @@ from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from config.database import Base, get_db
+from config.settings import settings
 from main import app
+
+
+stay_days = 1
+ahead_days = 10
 
 
 @pytest.fixture(scope="session")
@@ -138,8 +143,19 @@ def data_test_update_room():
 
 @pytest.fixture()
 def data_test_create_booking():
-    start_date = datetime.now().date()
-    end_date = start_date + timedelta(days=1)
+    start_date = datetime.now().date() + timedelta(days=ahead_days)
+    end_date = start_date + timedelta(days=stay_days)
     return {
             "date_from": str(start_date),
             "date_to": str(end_date)}
+
+
+@pytest.fixture()
+def data_test_result_get_free_room():
+    return [
+                {
+                    "date_from": str(datetime.now().date()),
+                    "date_to": str(datetime.now().date() + timedelta(days=ahead_days))},
+                {
+                    "date_from": str(datetime.now().date() + timedelta(days=ahead_days+stay_days)),
+                    "date_to": str(datetime.now().date() + timedelta(days=int(settings.FUTURE_PERIOD_IN_DAYS)))}]

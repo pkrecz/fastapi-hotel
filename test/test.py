@@ -240,6 +240,16 @@ async def sub_test_check_out_booking(async_client):
     logging.info("CheckOut booking testing finished.")
 
 
+async def sub_test_get_free_room(async_client, data_test_result_get_free_room):
+    response = await async_client.get(
+                                    url=f"/room_free/",
+                                    headers={"Authorization": f"Bearer {os.environ["BEARER_TOKEN"]}"})
+    logging.info("Get free room testing ...")
+    assert response.status_code == 200
+    assert response.json()[0]["free_booking"] == data_test_result_get_free_room
+    logging.info("Get free room testing finished.")
+
+
 ########################################## Execute tests ###########################################
 async def test_authentication(
                                 async_client,
@@ -264,15 +274,17 @@ async def test_hotel(
                                 data_test_create_room_type,
                                 data_test_create_room,
                                 data_test_update_room,
-                                data_test_create_booking):
+                                data_test_create_booking,
+                                data_test_result_get_free_room):
     logging.info("START - testing hotel module")
     await sub_test_register_user(async_client, data_test_register_user)
     await sub_test_login(async_client, data_test_login)
     await sub_test_create_room_type(async_client, data_test_create_room_type)
     await sub_test_create_room(async_client, data_test_create_room)
-    await sub_test_update_room(async_client, data_test_update_room)
     await sub_test_get_list_room(async_client)
     await sub_test_create_booking(async_client, data_test_create_booking)
+    await sub_test_get_free_room(async_client, data_test_result_get_free_room)
+    await sub_test_update_room(async_client, data_test_update_room)
     await sub_test_get_list_booking(async_client)
     await sub_test_check_in_booking(async_client)
     await sub_test_check_out_booking(async_client)

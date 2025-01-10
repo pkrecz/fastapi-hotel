@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi_filter.contrib.sqlalchemy import Filter
 from config.database import Base
+from config.settings import settings
 from util.crudrepository import CrudOperationRepository
 from .models import RoomTypeModel, RoomModel, BookingModel
 from .repository import RoomTypeRepository, RoomRepository, BookingRepository
@@ -62,6 +63,11 @@ class RoomService:
 
     async def room_get_list(self, filter: Filter = None) -> Model:
         instance = await self.crud.get_all(filter)
+        return await self.crud.list(instance)
+
+
+    async def room_free_get_list(self) -> Model:
+        instance = await self.room.get_free_room(int(settings.FUTURE_PERIOD_IN_DAYS))
         return await self.crud.list(instance)
 
 

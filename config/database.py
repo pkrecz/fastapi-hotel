@@ -23,7 +23,11 @@ def get_engine(db_url: str = url):
 
 
 def get_session():
-    session = async_sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+    session = async_sessionmaker(
+                                    autocommit=False,
+                                    autoflush=False,
+                                    expire_on_commit=False,
+                                    bind=get_engine())
     return session()
 
 
