@@ -1,10 +1,14 @@
 from typing import TypeVar
+from fastapi import BackgroundTasks
+from fastapi_mail import MessageSchema
 from sqlalchemy import select, exists, or_, not_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager
 from datetime import date, datetime, timedelta
 from config.database import Base
+from util.mailservice import send_email
 from .models import BookingModel
+from app_admin.models import UserModel
 
 
 Model = TypeVar("Model", bound=Base)
@@ -164,6 +168,13 @@ class BookingRepository:
         return instance.all()
 
 
+    async def get_email_by_booking_id(self, id: int) -> str:
+        query = select(UserModel.email) \
+                                            .join(BookingModel, UserModel.bookings) \
+                                            .filter(BookingModel.id == id)
+        return await self.db.scalar(query)
+
+
     async def check_availability_room(self, id: int, date_from: date, date_to: date) -> bool:
         requested_days_list = create_list_of_days(start_date=date_from, stop_date=date_to)
         occupied_days_list = await self.create_occupied_days_list(id=id)
@@ -171,3 +182,22 @@ class BookingRepository:
             if day in occupied_days_list:
                 return False
         return True
+
+
+    async def create_confirmation_send_email(self, id: int, background_task: BackgroundTasks):
+        email = await self.get_email_by_booking_id(id=id)
+        subject = "Confirmation of your booking"
+        body = {
+                "title": "Congratulations !!!",
+                "context": f"We confirm your booking ID: {id}"}
+        template_name = "confirmation_mail.html"
+
+        message = MessageSchema(
+                                subject=subject,
+                                recipients=[email],
+                                template_body=body,
+                                subtype="html")
+        await send_email(
+                            message=message,
+                            template_name=template_name,
+                            background_task=background_task)

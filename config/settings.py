@@ -1,8 +1,12 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
+from typing import ClassVar
 from dotenv import load_dotenv
 
+
 load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
@@ -18,6 +22,17 @@ class Settings(BaseSettings):
     FUTURE_PERIOD_IN_DAYS: str = str(os.getenv("FUTURE_PERIOD_IN_DAYS"))
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 240
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
+    MAIL_USERNAME: str = str(os.getenv("MAIL_USERNAME"))
+    MAIL_PASSWORD: str = str(os.getenv("MAIL_PASSWORD"))
+    MAIL_FROM: str = str(os.getenv("MAIL_FROM"))
+    MAIL_PORT: int = int(os.getenv("MAIL_PORT"))
+    MAIL_SERVER: str = str(os.getenv("MAIL_SERVER"))
+    MAIL_FROM_NAME: str = str(os.getenv("MAIL_FROM_NAME"))
+    MAIL_STARTTLS: bool = bool(os.getenv("MAIL_STARTTLS"))
+    MAIL_SSL_TLS: bool = bool(os.getenv("MAIL_SSL_TLS"))
+    USE_CREDENTIALS: bool = bool(os.getenv("USE_CREDENTIALS"))
+    VALIDATE_CERTS: bool = bool(os.getenv("VALIDATE_CERTS"))
+    TEMPLATE_FOLDER: ClassVar = Path(BASE_DIR, "util", "templates")
 
 
 settings = Settings()

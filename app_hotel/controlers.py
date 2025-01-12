@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi_restful.cbv import cbv
 from fastapi_filter import FilterDepends
@@ -84,8 +84,12 @@ class APIClass:
     @router_hotel.post(path="/booking/", response_model=BookingViewBase, status_code=status.HTTP_201_CREATED)
     async def create_booking(
                                 self,
-                                data: BookingCreateBase):
-        service = BookingService(db=self.db, cuser=self.cuser)
+                                data: BookingCreateBase,
+                                background_task: BackgroundTasks):
+        service = BookingService(
+                                    db=self.db,
+                                    cuser=self.cuser,
+                                    background_task=background_task)
         return await service.booking_create(data=data)
 
 

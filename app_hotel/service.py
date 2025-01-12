@@ -1,7 +1,8 @@
+from fastapi import BackgroundTasks
+from fastapi_filter.contrib.sqlalchemy import Filter
 from typing import TypeVar
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_filter.contrib.sqlalchemy import Filter
 from config.database import Base
 from config.settings import settings
 from util.crudrepository import CrudOperationRepository
@@ -73,9 +74,10 @@ class RoomService:
 
 class BookingService:
 
-    def __init__(self, db: AsyncSession, cuser: Model = None):
+    def __init__(self, db: AsyncSession, cuser: Model = None, background_task: BackgroundTasks = None):
         self.db = db
         self.cuser = cuser
+        self.background_task = background_task
         self.crud = CrudOperationRepository(self.db, BookingModel)
         self.booking = BookingRepository(self.db, BookingModel)
 
@@ -83,11 +85,15 @@ class BookingService:
     async def booking_create(self, data: BaseModel) -> Model:
         input = {**data.model_dump(), "user": self.cuser.id}
         if not await self.booking.check_availability_room(
-                                                        id=data.room,
-                                                        date_from=data.date_from,
-                                                        date_to=data.date_to):
+                                                            id=data.room,
+                                                            date_from=data.date_from,
+                                                            date_to=data.date_to):
             raise exceptions.RoomNotAvailableException
-        return await self.crud.create(input)
+        instance = await self.crud.create(input)
+        await self.booking.create_confirmation_send_email(
+                                                            id=instance.id,
+                                                            background_task=self.background_task)
+        return instance
 
 
     async def booking_delete(self, id) -> bool:
