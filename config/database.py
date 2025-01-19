@@ -14,7 +14,7 @@ class Base(DeclarativeBase):
 
 
 load_dotenv()
-url = os.getenv("DATABASE_URL")
+url = os.getenv("DATABASE_URL", default=os.getenv("DATABASE_URL_LOCAL"))
 
 
 @cache

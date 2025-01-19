@@ -1,0 +1,17 @@
+*.pyc
+*~
+**/.pytest_cache
+**/__pycache__
+**/.git
+**/.gitignore
+**/.vscode
+**/coverage
+**/.env
+**/.aws
+**/.ssh
+**/.DS_Store
+**/venv
+**/env
+/.idea
+/mediafiles
+env
