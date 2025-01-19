@@ -1,6 +1,6 @@
 from typing import TypeVar
 from fastapi import BackgroundTasks
-from fastapi_mail import MessageSchema
+from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy import select, exists, or_, not_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager
@@ -153,10 +153,14 @@ class BookingRepository:
         filter_status_list = list()
         for condition in ["Active", "CheckIn"]:
             filter_status_list.append(self.model.status == condition)
-        query = select(self.model).filter(self.model.room == id, or_(*filter_status_list))
+        query = select(self.model).filter(
+                                            self.model.room == id,
+                                            or_(*filter_status_list))
         instance = await self.db.scalars(query)
         for item in instance.all():
-            occupied_days_list += create_list_of_days(start_date=item.date_from, stop_date=item.date_to)
+            occupied_days_list += create_list_of_days(
+                                                        start_date=item.date_from,
+                                                        stop_date=item.date_to)
         occupied_days_list = list(set(occupied_days_list))
         occupied_days_list.sort()
         return occupied_days_list
@@ -170,13 +174,15 @@ class BookingRepository:
 
     async def get_email_by_booking_id(self, id: int) -> str:
         query = select(UserModel.email) \
-                                            .join(BookingModel, UserModel.bookings) \
-                                            .filter(BookingModel.id == id)
+                                            .join(self.model, UserModel.bookings) \
+                                            .filter(self.model.id == id)
         return await self.db.scalar(query)
 
 
     async def check_availability_room(self, id: int, date_from: date, date_to: date) -> bool:
-        requested_days_list = create_list_of_days(start_date=date_from, stop_date=date_to)
+        requested_days_list = create_list_of_days(
+                                                    start_date=date_from,
+                                                    stop_date=date_to)
         occupied_days_list = await self.create_occupied_days_list(id=id)
         for day in requested_days_list[1::]:
             if day in occupied_days_list:
@@ -196,7 +202,7 @@ class BookingRepository:
                                 subject=subject,
                                 recipients=[email],
                                 template_body=body,
-                                subtype="html")
+                                subtype=MessageType.html)
         await send_email(
                             message=message,
                             template_name=template_name,
