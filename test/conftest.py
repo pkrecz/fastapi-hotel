@@ -1,4 +1,3 @@
-import os
 import logging
 import asyncio
 import pytest
@@ -8,6 +7,7 @@ from asgi_lifespan import LifespanManager
 from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from testcontainers.postgres import PostgresContainer
 from config.database import Base, get_db
 from config.settings import settings
 from main import app
@@ -20,7 +20,10 @@ ahead_days = 10
 @pytest.fixture(scope="session")
 async def async_engine():
 
-    _engine = create_async_engine(os.getenv("DATABASE_URL_TEST"))
+    container = PostgresContainer("postgres:17.0-bookworm", driver="asyncpg")
+    container.start()
+
+    _engine = create_async_engine(url=container.get_connection_url())
 
     async with _engine.begin() as engine:
         await engine.run_sync(Base.metadata.drop_all)
@@ -32,6 +35,8 @@ async def async_engine():
     async with _engine.begin() as engine:
         await engine.run_sync(Base.metadata.drop_all)
     logging.info("Configuration -----> Tables for testing has been removed.")
+
+    container.stop()
 
 
 @pytest.fixture(scope="session")
