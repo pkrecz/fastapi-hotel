@@ -48,3 +48,10 @@ class IncorrectRangeDatesException(HTTPException):
         super().__init__(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Incorrect range of dates.")
+
+
+class InconsistencyDataException(HTTPException):
+    def __init__(self):
+        super().__init__(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Inconsistency of data - no save.")

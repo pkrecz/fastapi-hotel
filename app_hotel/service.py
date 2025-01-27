@@ -6,8 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config.database import Base
 from config.settings import settings
 from util.crudrepository import CrudOperationRepository
+from util.filesupport import convert_xlsx_to_list_of_dict
 from .models import RoomTypeModel, RoomModel, BookingModel
 from .repository import RoomTypeRepository, RoomRepository, BookingRepository
+from .schemas import RoomCreateBase
 from . import exceptions
 
 
@@ -42,12 +44,32 @@ class RoomService:
         self.model = RoomModel
         self.crud = CrudOperationRepository(self.db, self.model)
         self.room = RoomRepository(self.db, self.model)
+        self.room_type = RoomTypeRepository(self.db, RoomTypeModel)
 
 
     async def room_create(self, data: BaseModel) -> Model:
         if await self.room.check_if_exists_room_by_number(data.number):
             raise exceptions.RoomNumberExistsException
         return await self.crud.create(data)
+
+
+    async def room_create_import(self, data: BaseModel) -> bool:
+        list_of_rooms = await convert_xlsx_to_list_of_dict(file=data.file)
+        list_of_room_type = await self.room_type.get_all_room_type()
+
+        def get_id_by_room_type(list_of_room_types: list = list_of_room_type, room_type: str = None) -> int:
+            for single_type in list_of_room_types:
+                if single_type.type == room_type:
+                    return single_type.id
+
+        try:
+            for single_room in list_of_rooms:
+                room_type_id = get_id_by_room_type(room_type=single_room["type"])
+                single_room.update({"type": room_type_id})
+                RoomCreateBase(**single_room)
+            return await self.crud.create_all(list_of_rooms)
+        except:
+            raise exceptions.InconsistencyDataException
 
 
     async def room_update(self, id: int, data: BaseModel) -> Model:

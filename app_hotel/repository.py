@@ -41,6 +41,12 @@ class RoomTypeRepository:
         return await self.db.scalar(query)
 
 
+    async def get_all_room_type(self) -> list:
+        query = select(self.model)
+        instance = await self.db.scalars(query)
+        return instance.all()
+
+
 class RoomRepository:
 
     def __init__(self, db: AsyncSession, model: Model):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, BackgroundTasks
+from fastapi import APIRouter, Depends, status, BackgroundTasks, Form
 from fastapi.responses import JSONResponse
 from fastapi_restful.cbv import cbv
 from fastapi_filter import FilterDepends
@@ -8,7 +8,7 @@ from config.dependency import Dependency
 from app_admin.models import UserModel
 from .schemas import (
                         RoomTypeCreateBase, RoomTypeViewBase,
-                        RoomCreateBase, RoomUpdateBase, RoomViewBase, RoomFreeBase,
+                        RoomCreateBase, RoomUpdateBase, RoomViewBase, RoomFreeBase, RoomImportBase,
                         BookingCreateBase, BookingViewBase)
 from .filters import RoomFilter, BookingFilter
 from .service import RoomTypeService, RoomService, BookingService
@@ -47,6 +47,15 @@ class APIClass:
                                 data: RoomCreateBase):
         service = RoomService(db=self.db)
         return await service.room_create(data=data)
+
+
+    @router_hotel.post(path="/room/import/")
+    async def create_room_import(
+                                self,
+                                data: RoomImportBase = Form()):
+        service = RoomService(db=self.db)
+        await service.room_create_import(data=data)
+        return JSONResponse(content={"message": "Data from file uploaded successfully."}, status_code=status.HTTP_201_CREATED)
 
 
     @router_hotel.put(path="/room/{id}/", response_model=RoomViewBase, status_code=status.HTTP_200_OK)

@@ -1,3 +1,4 @@
+from fastapi import UploadFile
 from pydantic import BaseModel, model_validator, Field
 from typing import Optional
 from datetime import date, datetime
@@ -17,7 +18,11 @@ class RoomCreateBase(BaseModel):
     number: str = Field(max_length=10, pattern="^[a-zA-Z0-9]*$")
     person: int = Field(gt=0)
     type: int
-    description: Optional[str] = Field(max_length=250)
+    description: Optional[str] = Field(max_length=250, default=None)
+
+
+class RoomImportBase(BaseModel):
+    file: UploadFile
 
 
 class RoomUpdateBase(BaseModel):

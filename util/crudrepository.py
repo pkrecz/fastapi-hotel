@@ -39,6 +39,16 @@ class CrudOperationRepository:
         return record
 
 
+    async def create_all(self, data: list[dict]) -> bool:
+        bulk_data = list()
+        for item in data:
+           record = self.model(**item)
+           bulk_data.append(record)
+        self.db.add_all(bulk_data)
+        await self.db.flush()
+        return True
+
+
     async def update(self, id: int, data: Annotated[BaseModel, dict]) -> Model:
         record = await self.get_by_id(id)
         if isinstance(data, BaseModel):
