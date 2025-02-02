@@ -67,12 +67,11 @@ async def async_client(event_loop, async_session: AsyncSession) -> AsyncGenerato
             yield async_session
         finally:
             async_session.close()
-    
+
     app.dependency_overrides[get_db] = override_get_db
     logging.info("Configuration -----> Dependency overrided.")
 
     async with LifespanManager(app):
-       
         async with AsyncClient(
                         transport=ASGITransport(app=app),
                         base_url="http://testserver") as client:

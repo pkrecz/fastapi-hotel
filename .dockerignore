@@ -13,5 +13,5 @@
 **/venv
 **/env
 /.idea
-/mediafiles
+/logs
 env

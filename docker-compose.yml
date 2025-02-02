@@ -4,6 +4,8 @@ services:
   service_api:
     build:
       context: .
+      args:
+        LOG_FILES: ${LOG_FILES}
     image: hotel_api:1.0
     env_file:
       - ./.env
@@ -11,6 +13,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - log-data:/home/fastapi-hotel/app/${LOG_FILES}
     expose:
       - "8000"
     depends_on:
@@ -58,6 +61,7 @@ services:
 
 volumes:
   hotel-data:
+  log-data:
 
 
 networks:

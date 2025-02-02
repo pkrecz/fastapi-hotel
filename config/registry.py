@@ -1,6 +1,7 @@
 import logging
 from fastapi.middleware.cors import CORSMiddleware
-from config.database import Base, get_engine
+from .database import Base, get_engine
+from .middleware import MonitoringAPIMiddleware
 from app_admin import controlers as admin_controlers
 from app_hotel import controlers as hotel_controlers
 
@@ -27,6 +28,7 @@ def init_routers(app):
 
 
 def init_middleware(app):
+    app.middleware("http")(MonitoringAPIMiddleware())
     app.add_middleware(
                         CORSMiddleware,
                         allow_origins=["*"],

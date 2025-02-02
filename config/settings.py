@@ -3,6 +3,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 from typing import ClassVar
 from dotenv import load_dotenv
+from functools import lru_cache
 
 
 load_dotenv()
@@ -33,6 +34,11 @@ class Settings(BaseSettings):
     USE_CREDENTIALS: bool = bool(os.getenv("USE_CREDENTIALS"))
     VALIDATE_CERTS: bool = bool(os.getenv("VALIDATE_CERTS"))
     TEMPLATE_FOLDER: ClassVar = Path(BASE_DIR, "util", "templates")
+    LOG_FILES: ClassVar = Path(BASE_DIR, str(os.getenv("LOG_FILES")))
 
 
-settings = Settings()
+@lru_cache(maxsize=None, typed=False)
+def get_settings():
+    return Settings()
+
+settings = get_settings()

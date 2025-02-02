@@ -1,5 +1,8 @@
+from datetime import datetime, UTC
 from fastapi import UploadFile, HTTPException, status
 from openpyxl import load_workbook
+from pathlib import Path
+from config.settings import settings
 
 
 class NoDataInFileException(Exception):
@@ -33,3 +36,12 @@ async def convert_xlsx_to_list_of_dict(file: UploadFile) -> list:
         raise HTTPException(
                                 detail="File conversion error.",
                                 status_code=status.HTTP_400_BAD_REQUEST)
+
+
+async def save_log_file(prefix: str, line_context: str):
+    current_date = datetime.now(tz=UTC).strftime("%Y_%m_%d")
+    file_name = f"{prefix}_{current_date}.log"
+    full_path_file = Path(settings.LOG_FILES, file_name)
+    file = open(file=full_path_file, mode="a")
+    file.write(line_context)
+    file.close()
