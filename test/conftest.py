@@ -23,17 +23,17 @@ async def async_engine():
     container = PostgresContainer("postgres:17.0-bookworm", driver="asyncpg")
     container.start()
 
-    _engine = create_async_engine(url=container.get_connection_url())
+    engine = create_async_engine(url=container.get_connection_url())
 
-    async with _engine.begin() as engine:
-        await engine.run_sync(Base.metadata.drop_all)
-        await engine.run_sync(Base.metadata.create_all)
+    async with engine.begin() as _engine:
+        await _engine.run_sync(Base.metadata.drop_all)
+        await _engine.run_sync(Base.metadata.create_all)
     logging.info("Configuration -----> Tables for testing has been created.")
 
-    yield _engine
+    yield engine
 
-    async with _engine.begin() as engine:
-        await engine.run_sync(Base.metadata.drop_all)
+    async with engine.begin() as _engine:
+        await _engine.run_sync(Base.metadata.drop_all)
     logging.info("Configuration -----> Tables for testing has been removed.")
 
     container.stop()
@@ -42,31 +42,30 @@ async def async_engine():
 @pytest.fixture(scope="session")
 async def async_session(async_engine) -> AsyncGenerator[AsyncSession, None]:
 
-    _session = async_sessionmaker(
+    connection = await async_engine.connect()
+    logging.info("Configuration -----> Connection established.")
+    transaction = await connection.begin()
+    logging.info("Configuration -----> Transaction started.")
+    session = async_sessionmaker(
                                     autocommit=False,
                                     autoflush=False,
                                     expire_on_commit=False,
-                                    bind=async_engine)
-    logging.info("Configuration -----> Session created.")
-    async with _session() as session:
-
-        await session.begin()
-        logging.info("Configuration -----> Session started.")
-        yield session
-        await session.rollback()
-        logging.info("Configuration -----> Rollback executed.")
-        await session.close()
-        logging.info("Configuration -----> Session closed.")
+                                    bind=async_engine)()
+    logging.info("Configuration -----> Session ready for running.")
+    yield session
+    await session.close()
+    logging.info("Configuration -----> Session closed.")
+    await transaction.rollback()
+    logging.info("Configuration -----> Rollback executed.")
+    await connection.close()
+    logging.info("Configuration -----> Connection closed.")
 
 
 @pytest_asyncio.fixture(scope="session")
 async def async_client(event_loop, async_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
     def override_get_db():
-        try:
-            yield async_session
-        finally:
-            async_session.close()
+        yield async_session
 
     app.dependency_overrides[get_db] = override_get_db
     logging.info("Configuration -----> Dependency overrided.")
