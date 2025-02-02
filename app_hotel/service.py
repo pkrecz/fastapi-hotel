@@ -1,5 +1,6 @@
 from fastapi import BackgroundTasks
 from fastapi_filter.contrib.sqlalchemy import Filter
+from functools import lru_cache
 from typing import TypeVar
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,6 +58,7 @@ class RoomService:
         list_of_rooms = await convert_xlsx_to_list_of_dict(file=data.file)
         list_of_room_type = await self.room_type.get_all_room_type()
 
+        @lru_cache
         def get_id_by_room_type(list_of_room_types: list = list_of_room_type, room_type: str = None) -> int:
             for single_type in list_of_room_types:
                 if single_type.type == room_type:
@@ -89,6 +91,7 @@ class RoomService:
         return await self.crud.list(instance)
 
 
+    @lru_cache
     async def room_free_get_list(self) -> Model:
         instance = await self.room.get_free_room(int(settings.FUTURE_PERIOD_IN_DAYS))
         return await self.crud.list(instance)

@@ -1,5 +1,6 @@
 import bcrypt
 from fastapi.security import OAuth2PasswordBearer
+from functools import lru_cache
 from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
@@ -39,15 +40,18 @@ class AuthenticationRepository:
         return await self.db.scalar(query)
 
 
+    @lru_cache
     async def get_user_by_id(self, id: int) -> Model:
         return await self.db.get(self.model, id)
 
 
+    @lru_cache
     async def get_user_by_username(self, username: str) -> Model:
         query = select(self.model).filter(self.model.username == username)
         return await self.db.scalar(query)
 
 
+    @lru_cache
     async def get_active_status(self, username: str) -> bool:
         query = select(self.model).filter(self.model.username == username)
         instance = await self.db.scalar(query)

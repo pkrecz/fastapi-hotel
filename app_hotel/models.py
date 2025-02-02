@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey, Date
+from sqlalchemy import Integer, String, ForeignKey, Date, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from config.database import Base
 from datetime import date
@@ -6,8 +6,12 @@ from datetime import date
 
 class BookingModel(Base):
     __tablename__ = "booking"
+    __table_args__ = (
+                        Index("idx_booking_id", "id", postgresql_using="btree"),
+                        Index("idx_booking_status", "status", postgresql_using="btree"),
+                        Index("idx_booking_date_from_to", "date_from", "date_to", postgresql_using="btree"))
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     date_from: Mapped[date] = mapped_column(Date, nullable=False)
     date_to: Mapped[date] = mapped_column(Date, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="Active")
@@ -20,8 +24,11 @@ class BookingModel(Base):
 
 class RoomTypeModel(Base):
     __tablename__ = "roomtype"
+    __table_args__ = (
+                        Index("idx_roomtype_id", "id", postgresql_using="btree"),
+                        Index("idx_roomtype_type", "type", postgresql_using="btree"))
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     type: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
 
     rooms = relationship("RoomModel", back_populates="roomtypes", lazy="selectin")
@@ -29,8 +36,12 @@ class RoomTypeModel(Base):
 
 class RoomModel(Base):
     __tablename__ = "room"
+    __table_args__ = (
+                        Index("idx_room_id", "id", postgresql_using="btree"),
+                        Index("idx_room_person", "person", postgresql_using="btree"),
+                        Index("idx_room_type", "type", postgresql_using="btree"))
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     number: Mapped[str] = mapped_column(String(10), unique=True, nullable=False)
     person: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String(250), nullable=True)
