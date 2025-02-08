@@ -3,22 +3,29 @@ from sqlalchemy.exc import DatabaseError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 from collections.abc import AsyncGenerator
-from functools import lru_cache
 from dotenv import load_dotenv
 from .util import Singleton
+from .redis import get_redis_sync
 
+
+load_dotenv()
 
 class Base(DeclarativeBase):
     pass
 
 
-load_dotenv()
+redis_session = next(get_redis_sync())
 url = os.getenv("DATABASE_URL", default=os.getenv("DATABASE_URL_LOCAL"))
 
 
-@lru_cache
 def get_engine(db_url: str = url):
-    return create_async_engine(url=db_url, pool_pre_ping=True)
+    cached_value = redis_session.get("db_url")
+    if cached_value is not None:
+        url = cached_value
+    else:
+        redis_session.set("db_url", db_url, ex=3600)
+        url = db_url
+    return create_async_engine(url=url, pool_pre_ping=True)
 
 
 def get_session():
