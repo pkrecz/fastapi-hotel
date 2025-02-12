@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     title: str = "Hotel - booking"
     version: str = "1.0.0"
-    docs_url: str = "/swagger"
+    docs_url: str = "/swagger/"
 
 
     ACCESS_SECRET_KEY: str = str(os.getenv("ACCESS_SECRET_KEY"))

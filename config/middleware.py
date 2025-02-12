@@ -38,6 +38,8 @@ class MonitoringAPIMiddleware:
     async def convert_response_body(self, response: StreamingResponse) -> str:
         response_body = [section async for section in response.body_iterator]
         response.body_iterator = iterate_in_threadpool(iter(response_body))
+        if len(response_body) == 0:
+            return str("{\"detail\":\"No data.\"}")
         return response_body[0].decode()
 
 
